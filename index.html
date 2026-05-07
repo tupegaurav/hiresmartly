@@ -1,248 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HireSmartly AI</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <style>
+<title>HireSmartly AI</title>
 
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:Arial, Helvetica, sans-serif;
-    }
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
 
-    body{
-      background:#041129;
-      color:white;
-      min-height:100vh;
-      overflow-x:hidden;
-    }
+body{
+background:#031225;
+color:white;
+padding:40px;
+background-image:
+linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
+background-size:50px 50px;
+}
 
-    .grid-bg{
-      position:fixed;
-      width:100%;
-      height:100%;
-      background-image:
-      linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-      background-size:40px 40px;
-      z-index:-1;
-    }
+.container{
+max-width:1200px;
+margin:auto;
+}
 
-    .container{
-      width:90%;
-      max-width:1200px;
-      margin:auto;
-      padding-top:40px;
-      padding-bottom:60px;
-    }
+.logo{
+font-size:42px;
+font-weight:bold;
+color:#32cfff;
+margin-bottom:10px;
+}
 
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:40px;
-    }
+.subtitle{
+color:#9db5c7;
+margin-bottom:40px;
+line-height:1.6;
+}
 
-    .logo{
-      font-size:34px;
-      color:#36d7ff;
-      font-weight:bold;
-    }
+.hero{
+text-align:center;
+margin-bottom:40px;
+}
 
-    .status{
-      padding:10px 20px;
-      border-radius:30px;
-      background:#06263f;
-      border:1px solid #0ff;
-      color:#0ff;
-      font-size:14px;
-    }
+.hero h1{
+font-size:58px;
+color:#42cfff;
+margin-bottom:20px;
+}
 
-    .hero{
-      text-align:center;
-      margin-bottom:40px;
-    }
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+margin-bottom:40px;
+}
 
-    .hero h1{
-      font-size:60px;
-      color:#47c9ff;
-      margin-bottom:20px;
-    }
+.card{
+background:#071d36;
+border:1px solid rgba(0,255,255,0.15);
+padding:25px;
+border-radius:18px;
+}
 
-    .hero p{
-      color:#9db7d3;
-      max-width:800px;
-      margin:auto;
-      line-height:1.7;
-      font-size:18px;
-    }
+.card h3{
+color:#33d1ff;
+margin-bottom:12px;
+}
 
-    .dashboard{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-      gap:20px;
-      margin-top:40px;
-      margin-bottom:40px;
-    }
+.input-section{
+background:#071d36;
+padding:30px;
+border-radius:20px;
+margin-bottom:40px;
+border:1px solid rgba(0,255,255,0.15);
+}
 
-    .card{
-      background:#081c38;
-      border:1px solid rgba(0,255,255,0.15);
-      border-radius:20px;
-      padding:25px;
-      box-shadow:0 0 20px rgba(0,255,255,0.05);
-    }
+textarea{
+width:100%;
+height:180px;
+background:#0d2038;
+border:none;
+padding:20px;
+color:white;
+font-size:15px;
+border-radius:14px;
+margin-bottom:20px;
+resize:none;
+}
 
-    .card h2{
-      color:#36d7ff;
-      margin-bottom:15px;
-      font-size:18px;
-    }
+input[type=file]{
+margin-bottom:20px;
+color:white;
+}
 
-    .card p{
-      color:#d7e9ff;
-      line-height:1.6;
-    }
+button{
+width:100%;
+padding:18px;
+border:none;
+border-radius:14px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+background:#36cfff;
+color:#00111f;
+transition:0.3s;
+}
 
-    .upload-section{
-      margin-top:50px;
-      background:#081c38;
-      padding:40px;
-      border-radius:25px;
-      border:1px solid rgba(0,255,255,0.2);
-    }
+button:hover{
+transform:scale(1.02);
+}
 
-    textarea{
-      width:100%;
-      height:180px;
-      border:none;
-      outline:none;
-      background:#102846;
-      color:white;
-      border-radius:15px;
-      padding:20px;
-      font-size:16px;
-      margin-bottom:25px;
-    }
+.result{
+display:none;
+margin-top:40px;
+}
 
-    input[type="file"]{
-      margin-bottom:25px;
-      color:white;
-    }
+.result-grid{
+display:grid;
+grid-template-columns:300px 1fr;
+gap:25px;
+}
 
-    button{
-      width:100%;
-      padding:18px;
-      border:none;
-      border-radius:15px;
-      background:#38cfff;
-      color:black;
-      font-size:18px;
-      font-weight:bold;
-      cursor:pointer;
-      transition:0.3s;
-    }
+.score-card{
+background:#071d36;
+padding:30px;
+border-radius:20px;
+text-align:center;
+border:1px solid rgba(0,255,255,0.15);
+}
 
-    button:hover{
-      transform:translateY(-2px);
-      box-shadow:0 0 20px rgba(0,255,255,0.3);
-    }
+.score-circle{
+width:180px;
+height:180px;
+border-radius:50%;
+border:12px solid #33d1ff;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:42px;
+font-weight:bold;
+margin:auto;
+margin-bottom:25px;
+color:#33d1ff;
+}
 
-    .result-box{
-      margin-top:40px;
-      background:#081c38;
-      border-radius:20px;
-      padding:30px;
-      border:1px solid rgba(0,255,255,0.15);
-      display:none;
-    }
+.badge{
+display:inline-block;
+padding:10px 20px;
+border-radius:999px;
+font-weight:bold;
+margin-top:15px;
+}
 
-    .result-box h2{
-      margin-bottom:20px;
-      color:#36d7ff;
-    }
+.hire{
+background:#00c853;
+color:white;
+}
 
-    pre{
-      white-space:pre-wrap;
-      line-height:1.7;
-      color:#d7e9ff;
-    }
+.reject{
+background:#ff1744;
+color:white;
+}
 
-  </style>
+.consider{
+background:#ffab00;
+color:black;
+}
+
+.analysis{
+background:#071d36;
+padding:30px;
+border-radius:20px;
+border:1px solid rgba(0,255,255,0.15);
+}
+
+.section{
+margin-bottom:30px;
+}
+
+.section h2{
+color:#33d1ff;
+margin-bottom:15px;
+}
+
+.tags{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.tag{
+background:#0d2038;
+padding:10px 15px;
+border-radius:999px;
+border:1px solid rgba(0,255,255,0.15);
+}
+
+.summary{
+line-height:1.8;
+color:#d5e6f2;
+}
+
+.loading{
+display:none;
+margin-top:20px;
+text-align:center;
+color:#33d1ff;
+font-size:18px;
+}
+
+@media(max-width:900px){
+
+.result-grid{
+grid-template-columns:1fr;
+}
+
+.hero h1{
+font-size:42px;
+}
+
+}
+</style>
 </head>
 
 <body>
 
-<div class="grid-bg"></div>
-
 <div class="container">
 
-  <div class="topbar">
-    <div class="logo">HireSmartly</div>
-    <div class="status">AI Resume Intelligence</div>
-  </div>
+<div class="hero">
+<div class="logo">HireSmartly</div>
 
-  <div class="hero">
-    <h1>AI Hiring Platform</h1>
+<h1>AI Hiring Platform</h1>
 
-    <p>
-      HireSmartly intelligently analyzes resumes against job descriptions
-      using AI-powered matching, candidate scoring, seniority analysis,
-      skill gap detection, and recruitment intelligence.
-    </p>
-  </div>
+<p class="subtitle">
+Advanced AI-powered recruitment intelligence platform for resume analysis,
+candidate scoring, ATS matching, and hiring recommendations.
+</p>
+</div>
 
-  <div class="dashboard">
+<div class="cards">
 
-    <div class="card">
-      <h2>Resume Intelligence</h2>
-      <p>
-        Extracts candidate experience, skills, leadership signals,
-        and domain expertise automatically.
-      </p>
-    </div>
+<div class="card">
+<h3>Resume Intelligence</h3>
+<p>
+Extracts candidate skills, experience, leadership signals,
+and domain expertise automatically.
+</p>
+</div>
 
-    <div class="card">
-      <h2>AI Match Scoring</h2>
-      <p>
-        Compares resumes with job descriptions and generates
-        accurate compatibility scores.
-      </p>
-    </div>
+<div class="card">
+<h3>AI Match Scoring</h3>
+<p>
+Compares resumes against job descriptions and generates
+accurate compatibility scores.
+</p>
+</div>
 
-    <div class="card">
-      <h2>Smart Hiring Decisions</h2>
-      <p>
-        Detects strengths, weaknesses, seniority levels,
-        and hiring recommendations instantly.
-      </p>
-    </div>
+<div class="card">
+<h3>Smart Hiring Decisions</h3>
+<p>
+Provides AI-based hiring recommendations and identifies strengths,
+gaps, and seniority level.
+</p>
+</div>
 
-  </div>
+</div>
 
-  <div class="upload-section">
+<div class="input-section">
 
-    <textarea id="jobDescription" placeholder="Paste Job Description Here..."></textarea>
+<textarea id="jobDescription" placeholder="Paste Job Description Here..."></textarea>
 
-    <input type="file" id="resumeFile"/>
+<input type="file" id="resumeFile" />
 
-    <button onclick="analyzeResume()">
-      Analyze Resume
-    </button>
+<button onclick="analyzeResume()">Analyze Resume</button>
 
-  </div>
+<div class="loading" id="loading">
+Analyzing candidate with AI...
+</div>
 
-  <div class="result-box" id="resultBox">
+</div>
 
-    <h2>Candidate Analysis</h2>
+<div class="result" id="result">
 
-    <pre id="result"></pre>
+<div class="result-grid">
 
-  </div>
+<div class="score-card">
+
+<div class="score-circle" id="scoreCircle">
+0%
+</div>
+
+<h2 id="decisionText">Decision</h2>
+
+<div class="badge" id="decisionBadge">
+Status
+</div>
+
+</div>
+
+<div class="analysis">
+
+<div class="section">
+<h2>Candidate Profile</h2>
+
+<p><strong>Name:</strong> <span id="candidateName"></span></p>
+<p><strong>Email:</strong> <span id="candidateEmail"></span></p>
+<p><strong>Phone:</strong> <span id="candidatePhone"></span></p>
+<p><strong>Experience:</strong> <span id="candidateExperience"></span></p>
+<p><strong>Seniority:</strong> <span id="candidateSeniority"></span></p>
+
+</div>
+
+<div class="section">
+<h2>Strengths</h2>
+<div class="tags" id="strengths"></div>
+</div>
+
+<div class="section">
+<h2>Skill Gaps</h2>
+<div class="tags" id="gaps"></div>
+</div>
+
+<div class="section">
+<h2>AI Summary</h2>
+<p class="summary" id="summary"></p>
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 </div>
 
@@ -250,47 +343,121 @@
 
 async function analyzeResume(){
 
-  const jd =
-    document.getElementById("jobDescription").value;
+const jobDescription =
+document.getElementById("jobDescription").value;
 
-  const file =
-    document.getElementById("resumeFile").files[0];
+const file =
+document.getElementById("resumeFile").files[0];
 
-  if(!jd || !file){
-    alert("Please upload resume and add job description.");
-    return;
-  }
+if(!jobDescription || !file){
+alert("Please provide job description and resume.");
+return;
+}
 
-  const formData = new FormData();
+const formData = new FormData();
 
-  formData.append("resume", file);
-  formData.append("job_description", jd);
+formData.append("job_description", jobDescription);
+formData.append("resume", file);
 
-  try{
+document.getElementById("loading").style.display = "block";
 
-    const response = await fetch(
-      "https://gauravtupe.app.n8n.cloud/webhook-test/recruit-score",
-      {
-        method:"POST",
-        body:formData
-      }
-    );
+try{
 
-    const data = await response.json();
+const response = await fetch(
+"https://gauravtupe.app.n8n.cloud/webhook-test/recruit-score",
+{
+method:"POST",
+body:formData
+}
+);
 
-    document.getElementById("resultBox").style.display = "block";
+const data = await response.json();
 
-    document.getElementById("result").textContent =
-      JSON.stringify(data, null, 2);
+console.log(data);
 
-  }
-  catch(error){
+document.getElementById("loading").style.display = "none";
+document.getElementById("result").style.display = "block";
 
-    console.error(error);
+const score = data.final_score || 0;
+const decision = data.decision || "Unknown";
 
-    alert("Webhook error occurred.");
+document.getElementById("scoreCircle").innerText =
+score + "%";
 
-  }
+document.getElementById("decisionText").innerText =
+decision;
+
+const badge =
+document.getElementById("decisionBadge");
+
+badge.innerText = decision;
+
+badge.className = "badge";
+
+if(decision.toLowerCase().includes("hire")){
+badge.classList.add("hire");
+}
+else if(decision.toLowerCase().includes("reject")){
+badge.classList.add("reject");
+}
+else{
+badge.classList.add("consider");
+}
+
+const profile = data.candidate_profile || {};
+
+document.getElementById("candidateName").innerText =
+profile.candidate_name || "N/A";
+
+document.getElementById("candidateEmail").innerText =
+profile.email || "N/A";
+
+document.getElementById("candidatePhone").innerText =
+profile.phone || "N/A";
+
+document.getElementById("candidateExperience").innerText =
+(profile.experience_years || 0) + " years";
+
+document.getElementById("candidateSeniority").innerText =
+profile.seniority || "Unknown";
+
+const strengthsContainer =
+document.getElementById("strengths");
+
+strengthsContainer.innerHTML = "";
+
+(data.strengths || []).forEach(skill=>{
+
+strengthsContainer.innerHTML +=
+`<div class="tag">${skill}</div>`;
+
+});
+
+const gapsContainer =
+document.getElementById("gaps");
+
+gapsContainer.innerHTML = "";
+
+(data.gaps || []).forEach(skill=>{
+
+gapsContainer.innerHTML +=
+`<div class="tag">${skill}</div>`;
+
+});
+
+document.getElementById("summary").innerText =
+data.summary || "No summary available.";
+
+}
+catch(error){
+
+console.error(error);
+
+document.getElementById("loading").style.display = "none";
+
+alert("Webhook connection failed.");
+
+}
 
 }
 
