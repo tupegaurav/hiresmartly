@@ -354,6 +354,11 @@ alert("Please provide job description and resume.");
 return;
 }
 
+if(file.type !== "application/pdf"){
+alert("Please upload PDF resume only.");
+return;
+}
+
 const formData = new FormData();
 
 formData.append("job_description", jobDescription);
@@ -361,15 +366,24 @@ formData.append("resume", file);
 
 document.getElementById("loading").style.display = "block";
 
+/* IMPROVEMENT 1 */
+/* Hide previous result before new analysis */
+
+document.getElementById("result").style.display = "none";
+
 try{
 
 const response = await fetch(
-"https://gauravtupe.app.n8n.cloud/webhook-test/recruit-score",
+"https://gauravtupe.app.n8n.cloud/webhook/recruit-score",
 {
 method:"POST",
 body:formData
 }
 );
+
+if(!response.ok){
+throw new Error("Webhook failed");
+}
 
 const data = await response.json();
 
@@ -421,32 +435,22 @@ document.getElementById("candidateExperience").innerText =
 document.getElementById("candidateSeniority").innerText =
 profile.seniority || "Unknown";
 
-const strengthsContainer =
-document.getElementById("strengths");
-
-strengthsContainer.innerHTML = "";
-
-(data.strengths || []).forEach(skill=>{
-
-strengthsContainer.innerHTML +=
-`<div class="tag">${skill}</div>`;
-
-});
-
-const gapsContainer =
-document.getElementById("gaps");
-
-gapsContainer.innerHTML = "";
-
-(data.gaps || []).forEach(skill=>{
-
-gapsContainer.innerHTML +=
-`<div class="tag">${skill}</div>`;
-
-});
-
 document.getElementById("summary").innerText =
 data.summary || "No summary available.";
+
+const strengthsHTML = (data.strengths || [])
+.map(skill => `<span class="tag">${skill}</span>`)
+.join("");
+
+document.getElementById("strengths").innerHTML =
+strengthsHTML;
+
+const gapsHTML = (data.gaps || [])
+.map(skill => `<span class="tag">${skill}</span>`)
+.join("");
+
+document.getElementById("gaps").innerHTML =
+gapsHTML;
 
 }
 catch(error){
@@ -455,7 +459,10 @@ console.error(error);
 
 document.getElementById("loading").style.display = "none";
 
-alert("Webhook connection failed.");
+/* IMPROVEMENT 2 */
+/* Better professional error message */
+
+alert("AI analysis failed. Please try again.");
 
 }
 
