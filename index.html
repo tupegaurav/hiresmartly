@@ -103,16 +103,7 @@
     font-weight: 300;
   }
 
-  .badge-powered {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border: 0.5px solid var(--border);
-    border-radius: 20px;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-    background: var(--surface);
-    backdrop-filter: blur(8px);
-  }
+
 
   /* ── HERO ── */
   .hero {
@@ -121,20 +112,7 @@
     margin-bottom: 3.5rem;
   }
 
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 1.2rem;
-    padding: 5px 14px;
-    border: 0.5px solid var(--gold-dim);
-    border-radius: 20px;
-    background: rgba(201,168,76,0.06);
-  }
+
 
   .hero h1 {
     font-family: 'Syne', sans-serif;
@@ -212,46 +190,7 @@
     color: white;
   }
 
-  /* ── CONFIG PANEL ── */
-  .config-card {
-    width: 100%;
-    max-width: 860px;
-    background: var(--surface);
-    backdrop-filter: blur(20px);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.2rem 1.5rem;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: border-color 0.3s;
-  }
 
-  .config-card:focus-within {
-    border-color: rgba(201,168,76,0.4);
-  }
-
-  .config-label {
-    font-size: 0.75rem;
-    color: var(--gold);
-    white-space: nowrap;
-    letter-spacing: 0.05em;
-    font-weight: 500;
-  }
-
-  .config-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    min-width: 0;
-  }
-
-  .config-input::placeholder { color: var(--text-dim); }
 
   /* ── MAIN CARD ── */
   .main-card {
@@ -775,14 +714,10 @@
         <div class="logo-sub">AI-Powered Resume Intelligence</div>
       </div>
     </div>
-    <div class="badge-powered">Powered by n8n + Groq LLaMA</div>
   </header>
 
   <!-- HERO -->
   <div class="hero">
-    <div class="hero-eyebrow">
-      <span>●</span> Three-Pipeline AI Evaluation
-    </div>
     <h1>Score Any Resume Against Any Job in Seconds</h1>
     <p>Paste a job description and a resume. The AI pipeline parses both, then scores the match — returning strengths, gaps, and a detailed explanation.</p>
   </div>
@@ -790,27 +725,11 @@
   <!-- STEP NAV -->
   <div class="steps-nav">
     <div class="step-pill active" id="pill-1">
-      <div class="step-num">1</div> Configure
+      <div class="step-num">1</div> Paste Content
     </div>
     <div class="step-pill" id="pill-2">
-      <div class="step-num">2</div> Paste Content
+      <div class="step-num">2</div> View Score
     </div>
-    <div class="step-pill" id="pill-3">
-      <div class="step-num">3</div> View Score
-    </div>
-  </div>
-
-  <!-- API CONFIG -->
-  <div class="config-card">
-    <div class="config-label">🔗 n8n Base URL</div>
-    <input
-      class="config-input"
-      id="base-url"
-      type="url"
-      placeholder="https://your-n8n-instance.com"
-      value=""
-    />
-    <button class="btn-secondary" onclick="saveConfig()">Save</button>
   </div>
 
   <!-- INPUT CARD -->
@@ -1027,33 +946,14 @@ function updateCharCount() {
   document.getElementById('char-count').textContent = `${jd.toLocaleString()} / ${r.toLocaleString()} characters`;
 }
 
-function saveConfig() {
-  const url = document.getElementById('base-url').value.trim();
-  if (url) {
-    localStorage.setItem('n8n_base_url', url);
-    showToast('Base URL saved ✓', 'success');
-    setPill(2);
-  } else {
-    showToast('Enter a valid URL first', 'error');
-  }
-}
-
-// Load saved URL
-(function() {
-  const saved = localStorage.getItem('n8n_base_url');
-  if (saved) document.getElementById('base-url').value = saved;
-})();
-
-function getBaseUrl() {
-  const url = (document.getElementById('base-url').value || localStorage.getItem('n8n_base_url') || '').trim().replace(/\/$/, '');
-  return url;
-}
+/* ── MASTER PIPELINE — single endpoint handles everything ── */
+const MASTER_ENDPOINT = 'https://gauravtupe1006.app.n8n.cloud/webhook/master-pipeline';
 
 function setPill(step) {
-  [1,2,3].forEach(n => {
+  [1,2].forEach(n => {
     const el = document.getElementById(`pill-${n}`);
     el.classList.remove('active','done');
-    if (n < step) el.classList.add('done'), el.querySelector('.step-num').textContent = '✓';
+    if (n < step) { el.classList.add('done'); el.querySelector('.step-num').textContent = '✓'; }
     else if (n === step) el.classList.add('active');
     else el.querySelector('.step-num').textContent = n;
   });
@@ -1064,13 +964,10 @@ function setLoadingStep(txt) {
 }
 
 async function runAnalysis() {
-  const base = getBaseUrl();
-  if (!base) { showToast('Set your n8n Base URL first', 'error'); return; }
-
-  const jdText = document.getElementById('jd-input').value.trim();
+  const jdText     = document.getElementById('jd-input').value.trim();
   const resumeText = document.getElementById('resume-input').value.trim();
 
-  if (!jdText) { showToast('Paste a Job Description', 'error'); return; }
+  if (!jdText)     { showToast('Paste a Job Description', 'error'); return; }
   if (!resumeText) { showToast('Paste a Resume', 'error'); return; }
 
   document.getElementById('loading').classList.add('active');
@@ -1078,48 +975,41 @@ async function runAnalysis() {
   setPill(2);
 
   try {
-    // Step 1: Parse JD
-    setLoadingStep('Step 1/3 — Parsing Job Description…');
-    const jdRes = await fetch(`${base}/webhook/jd-ingest`, {
+    setLoadingStep('Parsing Job Description…');
+    await delay(900);
+    setLoadingStep('Parsing Resume…');
+    await delay(900);
+    setLoadingStep('Scoring Match — almost done…');
+
+    const res = await fetch(MASTER_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jd_text: jdText })
+      body: JSON.stringify({ jd_text: jdText, resume_text: resumeText })
     });
-    if (!jdRes.ok) throw new Error(`JD Parser failed: ${jdRes.status} ${jdRes.statusText}`);
-    const parsedJD = await jdRes.json();
 
-    // Step 2: Parse Resume
-    setLoadingStep('Step 2/3 — Parsing Resume…');
-    const resumeRes = await fetch(`${base}/webhook/resume-upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume_text: resumeText })
-    });
-    if (!resumeRes.ok) throw new Error(`Resume Parser failed: ${resumeRes.status} ${resumeRes.statusText}`);
-    const parsedResume = await resumeRes.json();
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`Pipeline error ${res.status}${errText ? ': ' + errText.slice(0,120) : ''}`);
+    }
 
-    // Step 3: Score Match
-    setLoadingStep('Step 3/3 — Scoring Match…');
-    const scoreRes = await fetch(`${base}/webhook/match-score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parsed_jd: parsedJD, parsed_resume: parsedResume })
-    });
-    if (!scoreRes.ok) throw new Error(`Match Scorer failed: ${scoreRes.status} ${scoreRes.statusText}`);
-    const scoreData = await scoreRes.json();
+    const raw = await res.json();
+    // n8n may return array-wrapped result
+    const result = Array.isArray(raw) ? raw[0] : raw;
 
-    lastResults = { parsedJD, parsedResume, scoreData };
-    renderResults(parsedJD, parsedResume, scoreData);
-    setPill(3);
+    lastResults = result;
+    renderResults(result);
 
   } catch (err) {
     console.error(err);
     showToast(`Error: ${err.message}`, 'error');
+    setPill(1);
   } finally {
     document.getElementById('loading').classList.remove('active');
     document.getElementById('analyze-btn').disabled = false;
   }
 }
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function renderResults(jd, resume, score) {
   document.getElementById('input-section').style.display = 'none';
