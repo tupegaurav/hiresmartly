@@ -1011,98 +1011,108 @@ async function runAnalysis() {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function renderResults(jd, resume, score) {
+function renderResults(result) {
   document.getElementById('input-section').style.display = 'none';
   document.getElementById('results-section').style.display = 'block';
 
-  // Normalize — n8n may return array-wrapped or direct objects
-  const s = Array.isArray(score) ? score[0] : score;
-  const j = Array.isArray(jd)    ? jd[0]    : jd;
-  const r = Array.isArray(resume)? resume[0] : resume;
+  // Score data — direct from master-pipeline response
+  const matchScore = Number(result.match_score || 0);
+  const matchLevel = (result.match_level || 'Unknown Match').toLowerCase();
+  const strengths  = result.strengths || [];
+  const gaps       = result.gaps || [];
+  const reasoning  = result.reasoning || '';
 
-  const matchScore = Number(s.match_score || 0);
-  const matchLevel = (s.match_level || 'Unknown Match').toLowerCase();
-  const strengths  = s.strengths || [];
-  const gaps       = s.gaps || [];
-  const reasoning  = s.reasoning || '';
+  // Parsed sub-objects (present if orchestrator passes them through)
+  const j = result.parsed_jd   || {};
+  const r = result.parsed_resume || {};
 
-  // Score ring
+  // ── Score ring ──
   const circumference = 325.7;
   const offset = circumference - (matchScore / 100) * circumference;
-  const ring = document.getElementById('score-ring');
-  const color = matchLevel.includes('strong') ? '#10B981' : matchLevel.includes('moderate') ? '#F59E0B' : '#EF4444';
+  const ring  = document.getElementById('score-ring');
+  const color = matchLevel.includes('strong') ? '#10B981'
+              : matchLevel.includes('moderate') ? '#F59E0B'
+              : '#EF4444';
   ring.style.stroke = color;
   setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
 
-  // Animate number
+  // ── Animate number ──
   let n = 0;
   const step = matchScore / 60;
-  const interval = setInterval(() => {
+  const ticker = setInterval(() => {
     n = Math.min(n + step, matchScore);
     document.getElementById('score-display').textContent = Math.round(n);
-    if (n >= matchScore) clearInterval(interval);
+    if (n >= matchScore) clearInterval(ticker);
   }, 16);
 
-  // Badge
+  // ── Badge & text ──
   const badge = document.getElementById('match-badge');
-  badge.textContent = s.match_level || 'Unknown';
-  badge.className = 'match-level-badge ' + (matchLevel.includes('strong') ? 'strong' : matchLevel.includes('moderate') ? 'moderate' : 'weak');
+  badge.textContent = result.match_level || 'Unknown';
+  badge.className = 'match-level-badge ' +
+    (matchLevel.includes('strong') ? 'strong' : matchLevel.includes('moderate') ? 'moderate' : 'weak');
 
-  document.getElementById('score-title').textContent = `${j.job_title || 'Position'} ↔ ${r.candidate_name || 'Candidate'}`;
+  const titleEl = document.getElementById('score-title');
+  const jdTitle  = j.job_title || '';
+  const candName = r.candidate_name || '';
+  titleEl.textContent = jdTitle && candName ? `${jdTitle} ↔ ${candName}`
+                      : jdTitle || candName || 'Analysis Complete';
+
   document.getElementById('score-reasoning').textContent = reasoning;
 
-  // Strengths & Gaps
-  const sl = document.getElementById('strengths-list');
-  const gl = document.getElementById('gaps-list');
-  sl.innerHTML = strengths.map(s => `<span class="tag strength">${s}</span>`).join('');
-  gl.innerHTML = gaps.map(g => `<span class="tag gap">${g}</span>`).join('');
+  // ── Strengths & Gaps ──
+  document.getElementById('strengths-list').innerHTML =
+    strengths.map(s => `<span class="tag strength">${s}</span>`).join('') || '<span style="color:var(--text-dim);font-size:.8rem">None identified</span>';
+  document.getElementById('gaps-list').innerHTML =
+    gaps.map(g => `<span class="tag gap">${g}</span>`).join('') || '<span style="color:var(--text-dim);font-size:.8rem">None identified</span>';
 
-  // Parsed JD fields
+  // ── Parsed JD preview ──
   const jdFields = document.getElementById('jd-fields');
-  const jdData = [
-    ['Title', j.job_title || j.job_title],
-    ['Seniority', j.seniority],
-    ['Experience', j.min_experience_years != null ? `${j.min_experience_years}+ years` : null],
-    ['Location', j.location],
-    ['Type', j.employment_type],
-  ].filter(([,v]) => v);
+  const jdRows = [
+    ['Title',      j.job_title],
+    ['Seniority',  j.seniority],
+    ['Experience', j.min_experience_years != null ? `${j.min_experience_years}+ yrs` : null],
+    ['Location',   j.location],
+    ['Type',       j.employment_type],
+  ].filter(([, v]) => v);
 
-  jdFields.innerHTML = jdData.map(([k,v]) => `
-    <div class="parsed-field">
-      <span class="parsed-key">${k}</span>
-      <span class="parsed-val">${v}</span>
-    </div>
-  `).join('');
+  jdFields.innerHTML = jdRows.length
+    ? jdRows.map(([k, v]) => `
+        <div class="parsed-field">
+          <span class="parsed-key">${k}</span>
+          <span class="parsed-val">${v}</span>
+        </div>`).join('')
+    : '<span style="color:var(--text-dim);font-size:.8rem">Included in score</span>';
 
   if ((j.required_skills || []).length) {
     jdFields.innerHTML += `
       <div class="parsed-field" style="flex-direction:column;align-items:flex-start;gap:6px">
         <span class="parsed-key">Required Skills</span>
-        <div class="skill-chips">${(j.required_skills || []).map(s => `<span class="skill-chip">${s}</span>`).join('')}</div>
+        <div class="skill-chips">${j.required_skills.map(s => `<span class="skill-chip">${s}</span>`).join('')}</div>
       </div>`;
   }
 
-  // Parsed Resume fields
+  // ── Parsed Resume preview ──
   const resumeFields = document.getElementById('resume-fields');
-  const resumeData = [
-    ['Name', r.candidate_name],
-    ['Experience', r.total_years_experience != null ? `${r.total_years_experience} years` : null],
+  const resumeRows = [
+    ['Name',        r.candidate_name],
+    ['Experience',  r.total_years_experience != null ? `${r.total_years_experience} yrs` : null],
     ['Recent Role', r.most_recent_role],
-    ['Degree', r.education_degree],
-  ].filter(([,v]) => v);
+    ['Degree',      r.education_degree],
+  ].filter(([, v]) => v);
 
-  resumeFields.innerHTML = resumeData.map(([k,v]) => `
-    <div class="parsed-field">
-      <span class="parsed-key">${k}</span>
-      <span class="parsed-val">${v}</span>
-    </div>
-  `).join('');
+  resumeFields.innerHTML = resumeRows.length
+    ? resumeRows.map(([k, v]) => `
+        <div class="parsed-field">
+          <span class="parsed-key">${k}</span>
+          <span class="parsed-val">${v}</span>
+        </div>`).join('')
+    : '<span style="color:var(--text-dim);font-size:.8rem">Included in score</span>';
 
   if ((r.core_skills || []).length) {
     resumeFields.innerHTML += `
       <div class="parsed-field" style="flex-direction:column;align-items:flex-start;gap:6px">
         <span class="parsed-key">Core Skills</span>
-        <div class="skill-chips">${(r.core_skills || []).map(s => `<span class="skill-chip">${s}</span>`).join('')}</div>
+        <div class="skill-chips">${r.core_skills.map(s => `<span class="skill-chip">${s}</span>`).join('')}</div>
       </div>`;
   }
 
