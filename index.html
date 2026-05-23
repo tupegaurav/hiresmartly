@@ -2,473 +2,1304 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-<title>HireSmartly AI</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ATS Match Scorer — AI-Powered Resume Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, sans-serif;
-}
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: rgba(201,168,76,0.15);
+    --emerald: #10B981;
+    --emerald-dim: rgba(16,185,129,0.12);
+    --bg: #080C12;
+    --surface: rgba(14,20,32,0.85);
+    --surface-2: rgba(22,32,50,0.7);
+    --border: rgba(201,168,76,0.18);
+    --border-subtle: rgba(255,255,255,0.06);
+    --text: #EEF0F5;
+    --text-muted: rgba(238,240,245,0.5);
+    --text-dim: rgba(238,240,245,0.28);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --strong-match: #10B981;
+    --moderate-match: #F59E0B;
+    --weak-match: #EF4444;
+  }
 
-body{
-background:#031225;
-color:white;
-padding:40px;
-background-image:
-linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-background-size:50px 50px;
-}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-.container{
-max-width:1200px;
-margin:auto;
-}
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-.logo{
-font-size:42px;
-font-weight:bold;
-color:#32cfff;
-margin-bottom:10px;
-}
+  /* ── CANVAS BACKGROUND ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
 
-.subtitle{
-color:#9db5c7;
-margin-bottom:40px;
-line-height:1.6;
-}
+  /* ── LAYOUT ── */
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1rem 5rem;
+  }
 
-.hero{
-text-align:center;
-margin-bottom:40px;
-}
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2rem 0 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 3rem;
+  }
 
-.hero h1{
-font-size:58px;
-color:#42cfff;
-margin-bottom:20px;
-}
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
-margin-bottom:40px;
-}
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold), #8B6914);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
 
-.card{
-background:#071d36;
-border:1px solid rgba(0,255,255,0.15);
-padding:25px;
-border-radius:18px;
-}
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
 
-.card h3{
-color:#33d1ff;
-margin-bottom:12px;
-}
+  .logo-sub {
+    font-size: 0.72rem;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
 
-.input-section{
-background:#071d36;
-padding:30px;
-border-radius:20px;
-margin-bottom:40px;
-border:1px solid rgba(0,255,255,0.15);
-}
+  .badge-powered {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    background: var(--surface);
+    backdrop-filter: blur(8px);
+  }
 
-textarea{
-width:100%;
-height:180px;
-background:#0d2038;
-border:none;
-padding:20px;
-color:white;
-font-size:15px;
-border-radius:14px;
-margin-bottom:20px;
-resize:none;
-}
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    max-width: 640px;
+    margin-bottom: 3.5rem;
+  }
 
-input[type=file]{
-margin-bottom:20px;
-color:white;
-}
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    padding: 5px 14px;
+    border: 0.5px solid var(--gold-dim);
+    border-radius: 20px;
+    background: rgba(201,168,76,0.06);
+  }
 
-button{
-width:100%;
-padding:18px;
-border:none;
-border-radius:14px;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-background:#36cfff;
-color:#00111f;
-transition:0.3s;
-}
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--text) 30%, var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-button:hover{
-transform:scale(1.02);
-}
+  .hero p {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
 
-.result{
-display:none;
-margin-top:40px;
-}
+  /* ── STEP PILLS ── */
+  .steps-nav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2.5rem;
+    background: var(--surface);
+    backdrop-filter: blur(12px);
+    border: 0.5px solid var(--border-subtle);
+    border-radius: 50px;
+    padding: 4px;
+  }
 
-.result-grid{
-display:grid;
-grid-template-columns:300px 1fr;
-gap:25px;
-}
+  .step-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    transition: all 0.3s ease;
+    cursor: default;
+  }
 
-.score-card{
-background:#071d36;
-padding:30px;
-border-radius:20px;
-text-align:center;
-border:1px solid rgba(0,255,255,0.15);
-}
+  .step-pill.active {
+    background: var(--gold-dim);
+    color: var(--gold-light);
+    font-weight: 500;
+    box-shadow: 0 0 14px rgba(201,168,76,0.12);
+  }
 
-.score-circle{
-width:180px;
-height:180px;
-border-radius:50%;
-border:12px solid #33d1ff;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:42px;
-font-weight:bold;
-margin:auto;
-margin-bottom:25px;
-color:#33d1ff;
-}
+  .step-pill.done {
+    color: var(--emerald);
+  }
 
-.badge{
-display:inline-block;
-padding:10px 20px;
-border-radius:999px;
-font-weight:bold;
-margin-top:15px;
-}
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
 
-.hire{
-background:#00c853;
-color:white;
-}
+  .step-pill.done .step-num {
+    background: var(--emerald);
+    border-color: var(--emerald);
+    color: white;
+  }
 
-.reject{
-background:#ff1744;
-color:white;
-}
+  /* ── CONFIG PANEL ── */
+  .config-card {
+    width: 100%;
+    max-width: 860px;
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.3s;
+  }
 
-.consider{
-background:#ffab00;
-color:black;
-}
+  .config-card:focus-within {
+    border-color: rgba(201,168,76,0.4);
+  }
 
-.analysis{
-background:#071d36;
-padding:30px;
-border-radius:20px;
-border:1px solid rgba(0,255,255,0.15);
-}
+  .config-label {
+    font-size: 0.75rem;
+    color: var(--gold);
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
 
-.section{
-margin-bottom:30px;
-}
+  .config-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    min-width: 0;
+  }
 
-.section h2{
-color:#33d1ff;
-margin-bottom:15px;
-}
+  .config-input::placeholder { color: var(--text-dim); }
 
-.tags{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-}
+  /* ── MAIN CARD ── */
+  .main-card {
+    width: 100%;
+    max-width: 860px;
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    border: 0.5px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+  }
 
-.tag{
-background:#0d2038;
-padding:10px 15px;
-border-radius:999px;
-border:1px solid rgba(0,255,255,0.15);
-}
+  .main-card:hover {
+    transform: perspective(1200px) rotateX(0.5deg) translateY(-2px);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.6), 0 0 40px rgba(201,168,76,0.06);
+  }
 
-.summary{
-line-height:1.8;
-color:#d5e6f2;
-}
+  .card-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 0.5px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 
-.loading{
-display:none;
-margin-top:20px;
-text-align:center;
-color:#33d1ff;
-font-size:18px;
-}
+  .card-header-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--gold-dim);
+    border: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
 
-@media(max-width:900px){
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
 
-.result-grid{
-grid-template-columns:1fr;
-}
+  .card-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
 
-.hero h1{
-font-size:42px;
-}
+  /* ── DUAL PANELS ── */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
 
-}
+  .panel {
+    padding: 1.5rem 2rem;
+    position: relative;
+  }
+
+  .panel + .panel {
+    border-left: 0.5px solid var(--border-subtle);
+  }
+
+  .panel-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .panel-label::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: block;
+  }
+
+  textarea {
+    width: 100%;
+    height: 200px;
+    background: rgba(0,0,0,0.25);
+    border: 0.5px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    padding: 0.9rem 1rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  textarea:focus {
+    border-color: rgba(201,168,76,0.35);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
+  }
+
+  textarea::placeholder { color: var(--text-dim); }
+
+  /* ── ACTIONS ── */
+  .card-footer {
+    padding: 1.2rem 2rem;
+    border-top: 0.5px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .char-count {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--gold) 0%, #8B6914 100%);
+    border: none;
+    border-radius: 50px;
+    color: #1A1000;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+    white-space: nowrap;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(201,168,76,0.45);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: transparent;
+    border: 0.5px solid var(--border);
+    border-radius: 50px;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: rgba(201,168,76,0.35);
+    color: var(--text);
+  }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(8,12,18,0.82);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .loading-overlay.active { display: flex; }
+
+  .spinner-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--border-subtle);
+    border-top-color: var(--gold);
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .loading-step {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── RESULTS PANEL ── */
+  #results-section { display: none; width: 100%; max-width: 860px; }
+
+  .score-card {
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    border: 0.5px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+    margin-bottom: 1rem;
+  }
+
+  .score-hero {
+    padding: 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .score-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .score-ring-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+  }
+
+  .score-ring-svg {
+    width: 120px;
+    height: 120px;
+    transform: rotate(-90deg);
+  }
+
+  .score-ring-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.06);
+    stroke-width: 6;
+  }
+
+  .score-ring-fill {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 325.7;
+    stroke-dashoffset: 325.7;
+    transition: stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .score-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .score-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .score-label-sm {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .score-info { flex: 1; min-width: 0; }
+
+  .match-level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.8rem;
+  }
+
+  .match-level-badge.strong { background: rgba(16,185,129,0.15); color: #34D399; border: 0.5px solid rgba(16,185,129,0.3); }
+  .match-level-badge.moderate { background: rgba(245,158,11,0.15); color: #FCD34D; border: 0.5px solid rgba(245,158,11,0.3); }
+  .match-level-badge.weak { background: rgba(239,68,68,0.15); color: #FCA5A5; border: 0.5px solid rgba(239,68,68,0.3); }
+
+  .score-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .score-reasoning {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* ── DETAIL GRID ── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 0.5px solid var(--border-subtle);
+  }
+
+  .detail-pane {
+    padding: 1.5rem 2rem;
+  }
+
+  .detail-pane + .detail-pane {
+    border-left: 0.5px solid var(--border-subtle);
+  }
+
+  .pane-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pane-title.strength { color: var(--emerald); }
+  .pane-title.gap { color: #F87171; }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .tag.strength {
+    background: rgba(16,185,129,0.1);
+    border: 0.5px solid rgba(16,185,129,0.25);
+    color: #6EE7B7;
+  }
+
+  .tag.gap {
+    background: rgba(239,68,68,0.1);
+    border: 0.5px solid rgba(239,68,68,0.2);
+    color: #FCA5A5;
+  }
+
+  /* ── PARSED PREVIEW CARDS ── */
+  .parsed-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .parsed-mini-card {
+    background: var(--surface-2);
+    backdrop-filter: blur(16px);
+    border: 0.5px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+  }
+
+  .parsed-mini-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+
+  .parsed-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+    border-bottom: 0.5px solid var(--border-subtle);
+    font-size: 0.78rem;
+    gap: 8px;
+  }
+
+  .parsed-field:last-child { border-bottom: none; }
+  .parsed-key { color: var(--text-dim); flex-shrink: 0; }
+  .parsed-val { color: var(--text); text-align: right; font-weight: 400; }
+
+  .skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+  }
+
+  .skill-chip {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    background: rgba(201,168,76,0.1);
+    border: 0.5px solid rgba(201,168,76,0.2);
+    color: var(--gold-light);
+  }
+
+  /* ── RESET CTA ── */
+  .reset-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1rem;
+    gap: 12px;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.error {
+    background: rgba(239,68,68,0.15);
+    border: 0.5px solid rgba(239,68,68,0.35);
+    color: #FCA5A5;
+  }
+
+  .toast.success {
+    background: rgba(16,185,129,0.15);
+    border: 0.5px solid rgba(16,185,129,0.35);
+    color: #6EE7B7;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .panels, .detail-grid, .parsed-row { grid-template-columns: 1fr; }
+    .panel + .panel { border-left: none; border-top: 0.5px solid var(--border-subtle); }
+    .detail-pane + .detail-pane { border-left: none; border-top: 0.5px solid var(--border-subtle); }
+    .score-hero { flex-direction: column; text-align: center; }
+    header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+  }
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<canvas id="bg-canvas"></canvas>
 
-<div class="hero">
-<div class="logo">HireSmartly</div>
-
-<h1>AI Hiring Platform</h1>
-
-<p class="subtitle">
-Advanced AI-powered recruitment intelligence platform for resume analysis,
-candidate scoring, ATS matching, and hiring recommendations.
-</p>
+<div class="loading-overlay" id="loading">
+  <div class="spinner-ring"></div>
+  <div class="loading-text">Analyzing…</div>
+  <div class="loading-step" id="loading-step">Parsing Job Description</div>
 </div>
 
-<div class="cards">
+<div class="toast" id="toast"></div>
 
-<div class="card">
-<h3>Resume Intelligence</h3>
-<p>
-Extracts candidate skills, experience, leadership signals,
-and domain expertise automatically.
-</p>
-</div>
+<div class="page">
 
-<div class="card">
-<h3>AI Match Scoring</h3>
-<p>
-Compares resumes against job descriptions and generates
-accurate compatibility scores.
-</p>
-</div>
+  <!-- HEADER -->
+  <header>
+    <div class="logo-group">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <div class="logo-text">ATS Match Scorer</div>
+        <div class="logo-sub">AI-Powered Resume Intelligence</div>
+      </div>
+    </div>
+    <div class="badge-powered">Powered by n8n + Groq LLaMA</div>
+  </header>
 
-<div class="card">
-<h3>Smart Hiring Decisions</h3>
-<p>
-Provides AI-based hiring recommendations and identifies strengths,
-gaps, and seniority level.
-</p>
-</div>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>●</span> Three-Pipeline AI Evaluation
+    </div>
+    <h1>Score Any Resume Against Any Job in Seconds</h1>
+    <p>Paste a job description and a resume. The AI pipeline parses both, then scores the match — returning strengths, gaps, and a detailed explanation.</p>
+  </div>
 
-</div>
+  <!-- STEP NAV -->
+  <div class="steps-nav">
+    <div class="step-pill active" id="pill-1">
+      <div class="step-num">1</div> Configure
+    </div>
+    <div class="step-pill" id="pill-2">
+      <div class="step-num">2</div> Paste Content
+    </div>
+    <div class="step-pill" id="pill-3">
+      <div class="step-num">3</div> View Score
+    </div>
+  </div>
 
-<div class="input-section">
+  <!-- API CONFIG -->
+  <div class="config-card">
+    <div class="config-label">🔗 n8n Base URL</div>
+    <input
+      class="config-input"
+      id="base-url"
+      type="url"
+      placeholder="https://your-n8n-instance.com"
+      value=""
+    />
+    <button class="btn-secondary" onclick="saveConfig()">Save</button>
+  </div>
 
-<textarea id="jobDescription" placeholder="Paste Job Description Here..."></textarea>
+  <!-- INPUT CARD -->
+  <div class="main-card" id="input-section">
+    <div class="card-header">
+      <div class="card-header-icon">📋</div>
+      <div class="card-title">Input Details</div>
+      <div class="card-subtitle">Paste raw text — no formatting needed</div>
+    </div>
 
-<input type="file" id="resumeFile" />
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Job Description</div>
+        <textarea
+          id="jd-input"
+          placeholder="Paste the full job description here…&#10;&#10;e.g. We are looking for a Senior Full Stack Engineer with 5+ years of experience in React, Node.js, and PostgreSQL…"
+        ></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Candidate Resume</div>
+        <textarea
+          id="resume-input"
+          placeholder="Paste the resume text here…&#10;&#10;e.g. John Doe, Software Engineer with 7 years of experience. Skills: React, TypeScript, Node.js, AWS…"
+        ></textarea>
+      </div>
+    </div>
 
-<button onclick="analyzeResume()">Analyze Resume</button>
+    <div class="card-footer">
+      <div class="char-count" id="char-count">0 / 0 characters</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" onclick="loadDemo()">✦ Load Demo</button>
+        <button class="btn-primary" id="analyze-btn" onclick="runAnalysis()">
+          ⚡ Analyze Match
+        </button>
+      </div>
+    </div>
+  </div>
 
-<div class="loading" id="loading">
-Analyzing candidate with AI...
-</div>
+  <!-- RESULTS -->
+  <div id="results-section">
 
-</div>
+    <!-- SCORE HERO CARD -->
+    <div class="score-card">
+      <div class="score-hero">
+        <div class="score-ring-wrap">
+          <svg class="score-ring-svg" viewBox="0 0 120 120">
+            <circle class="score-ring-bg" cx="60" cy="60" r="52"/>
+            <circle class="score-ring-fill" id="score-ring" cx="60" cy="60" r="52"/>
+          </svg>
+          <div class="score-num">
+            <div class="score-value" id="score-display">0</div>
+            <div class="score-label-sm">/ 100</div>
+          </div>
+        </div>
 
-<div class="result" id="result">
+        <div class="score-info">
+          <div class="match-level-badge" id="match-badge">—</div>
+          <div class="score-title" id="score-title">Analysis Complete</div>
+          <div class="score-reasoning" id="score-reasoning">—</div>
+        </div>
+      </div>
 
-<div class="result-grid">
+      <div class="detail-grid">
+        <div class="detail-pane">
+          <div class="pane-title strength">✦ Strengths</div>
+          <div class="tag-list" id="strengths-list"></div>
+        </div>
+        <div class="detail-pane">
+          <div class="pane-title gap">⚠ Gaps</div>
+          <div class="tag-list" id="gaps-list"></div>
+        </div>
+      </div>
+    </div>
 
-<div class="score-card">
+    <!-- PARSED PREVIEWS -->
+    <div class="parsed-row">
+      <div class="parsed-mini-card" id="jd-preview">
+        <div class="parsed-mini-label">Parsed Job Description</div>
+        <div id="jd-fields"></div>
+      </div>
+      <div class="parsed-mini-card" id="resume-preview">
+        <div class="parsed-mini-label">Parsed Resume</div>
+        <div id="resume-fields"></div>
+      </div>
+    </div>
 
-<div class="score-circle" id="scoreCircle">
-0%
-</div>
+    <div class="reset-bar">
+      <button class="btn-secondary" onclick="resetAll()">↩ New Analysis</button>
+      <button class="btn-primary" onclick="exportResults()">⬇ Export JSON</button>
+    </div>
 
-<h2 id="decisionText">Decision</h2>
-
-<div class="badge" id="decisionBadge">
-Status
-</div>
-
-</div>
-
-<div class="analysis">
-
-<div class="section">
-<h2>Candidate Profile</h2>
-
-<p><strong>Name:</strong> <span id="candidateName"></span></p>
-<p><strong>Email:</strong> <span id="candidateEmail"></span></p>
-<p><strong>Phone:</strong> <span id="candidatePhone"></span></p>
-<p><strong>Experience:</strong> <span id="candidateExperience"></span></p>
-<p><strong>Seniority:</strong> <span id="candidateSeniority"></span></p>
-
-</div>
-
-<div class="section">
-<h2>Strengths</h2>
-<div class="tags" id="strengths"></div>
-</div>
-
-<div class="section">
-<h2>Skill Gaps</h2>
-<div class="tags" id="gaps"></div>
-</div>
-
-<div class="section">
-<h2>AI Summary</h2>
-<p class="summary" id="summary"></p>
-</div>
-
-</div>
-
-</div>
-
-</div>
+  </div>
 
 </div>
 
 <script>
+/* ═══════════════════════════════════════════════════
+   THREE.JS BACKGROUND — Floating particle network
+═══════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x080C12, 1);
 
-async function analyzeResume(){
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 80;
 
-const jobDescription =
-document.getElementById("jobDescription").value;
+  // Particles
+  const N = 180;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(N * 3);
+  const velocities = [];
+  for (let i = 0; i < N; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 160;
+    pos[i*3+1] = (Math.random() - 0.5) * 100;
+    pos[i*3+2] = (Math.random() - 0.5) * 60;
+    velocities.push(
+      (Math.random() - 0.5) * 0.025,
+      (Math.random() - 0.5) * 0.015,
+      (Math.random() - 0.5) * 0.01
+    );
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
 
-const file =
-document.getElementById("resumeFile").files[0];
+  const mat = new THREE.PointsMaterial({
+    color: 0xC9A84C,
+    size: 0.55,
+    transparent: true,
+    opacity: 0.55,
+    sizeAttenuation: true
+  });
+  const points = new THREE.Points(geo, mat);
+  scene.add(points);
 
-if(!jobDescription || !file){
-alert("Please provide job description and resume.");
-return;
+  // Lines connecting close particles
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xC9A84C, transparent: true, opacity: 0.08 });
+  let linesMesh = null;
+
+  function rebuildLines() {
+    if (linesMesh) scene.remove(linesMesh);
+    const lineGeo = new THREE.BufferGeometry();
+    const linePos = [];
+    const p = geo.attributes.position.array;
+    const threshold = 28;
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = p[i*3]-p[j*3], dy = p[i*3+1]-p[j*3+1], dz = p[i*3+2]-p[j*3+2];
+        if (Math.sqrt(dx*dx+dy*dy+dz*dz) < threshold) {
+          linePos.push(p[i*3],p[i*3+1],p[i*3+2], p[j*3],p[j*3+1],p[j*3+2]);
+        }
+      }
+    }
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
+    linesMesh = new THREE.LineSegments(lineGeo, lineMat);
+    scene.add(linesMesh);
+  }
+
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 0.4;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 0.3;
+  });
+
+  let frame = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    frame++;
+    const p = geo.attributes.position.array;
+    for (let i = 0; i < N; i++) {
+      p[i*3]   += velocities[i*3];
+      p[i*3+1] += velocities[i*3+1];
+      p[i*3+2] += velocities[i*3+2];
+      if (p[i*3] > 80) p[i*3] = -80;
+      if (p[i*3] < -80) p[i*3] = 80;
+      if (p[i*3+1] > 50) p[i*3+1] = -50;
+      if (p[i*3+1] < -50) p[i*3+1] = 50;
+    }
+    geo.attributes.position.needsUpdate = true;
+    if (frame % 8 === 0) rebuildLines();
+
+    camera.position.x += (mouseX * 10 - camera.position.x) * 0.03;
+    camera.position.y += (-mouseY * 8 - camera.position.y) * 0.03;
+    camera.lookAt(scene.position);
+
+    points.rotation.y += 0.0005;
+    renderer.render(scene, camera);
+  }
+  rebuildLines();
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
+   APP LOGIC
+═══════════════════════════════════════════════════ */
+let lastResults = null;
+
+// Char counter
+['jd-input','resume-input'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateCharCount);
+});
+
+function updateCharCount() {
+  const jd = document.getElementById('jd-input').value.length;
+  const r  = document.getElementById('resume-input').value.length;
+  document.getElementById('char-count').textContent = `${jd.toLocaleString()} / ${r.toLocaleString()} characters`;
 }
 
-if(file.type !== "application/pdf"){
-alert("Please upload PDF resume only.");
-return;
+function saveConfig() {
+  const url = document.getElementById('base-url').value.trim();
+  if (url) {
+    localStorage.setItem('n8n_base_url', url);
+    showToast('Base URL saved ✓', 'success');
+    setPill(2);
+  } else {
+    showToast('Enter a valid URL first', 'error');
+  }
 }
 
-const formData = new FormData();
+// Load saved URL
+(function() {
+  const saved = localStorage.getItem('n8n_base_url');
+  if (saved) document.getElementById('base-url').value = saved;
+})();
 
-formData.append("job_description", jobDescription);
-formData.append("resume", file);
-
-document.getElementById("loading").style.display = "block";
-
-/* IMPROVEMENT 1 */
-/* Hide previous result before new analysis */
-
-document.getElementById("result").style.display = "none";
-
-try{
-
-const response = await fetch(
-"https://gauravtupe.app.n8n.cloud/webhook/recruit-score",
-{
-method:"POST",
-body:formData
-}
-);
-
-if(!response.ok){
-throw new Error("Webhook failed");
+function getBaseUrl() {
+  const url = (document.getElementById('base-url').value || localStorage.getItem('n8n_base_url') || '').trim().replace(/\/$/, '');
+  return url;
 }
 
-const data = await response.json();
-
-console.log(data);
-
-document.getElementById("loading").style.display = "none";
-document.getElementById("result").style.display = "block";
-
-const score = data.final_score || 0;
-const decision = data.decision || "Unknown";
-
-document.getElementById("scoreCircle").innerText =
-score + "%";
-
-document.getElementById("decisionText").innerText =
-decision;
-
-const badge =
-document.getElementById("decisionBadge");
-
-badge.innerText = decision;
-
-badge.className = "badge";
-
-if(decision.toLowerCase().includes("hire")){
-badge.classList.add("hire");
-}
-else if(decision.toLowerCase().includes("reject")){
-badge.classList.add("reject");
-}
-else{
-badge.classList.add("consider");
+function setPill(step) {
+  [1,2,3].forEach(n => {
+    const el = document.getElementById(`pill-${n}`);
+    el.classList.remove('active','done');
+    if (n < step) el.classList.add('done'), el.querySelector('.step-num').textContent = '✓';
+    else if (n === step) el.classList.add('active');
+    else el.querySelector('.step-num').textContent = n;
+  });
 }
 
-const profile = data.candidate_profile || {};
-
-document.getElementById("candidateName").innerText =
-profile.candidate_name || "N/A";
-
-document.getElementById("candidateEmail").innerText =
-profile.email || "N/A";
-
-document.getElementById("candidatePhone").innerText =
-profile.phone || "N/A";
-
-document.getElementById("candidateExperience").innerText =
-(profile.experience_years || 0) + " years";
-
-document.getElementById("candidateSeniority").innerText =
-profile.seniority || "Unknown";
-
-document.getElementById("summary").innerText =
-data.summary || "No summary available.";
-
-const strengthsHTML = (data.strengths || [])
-.map(skill => `<span class="tag">${skill}</span>`)
-.join("");
-
-document.getElementById("strengths").innerHTML =
-strengthsHTML;
-
-const gapsHTML = (data.gaps || [])
-.map(skill => `<span class="tag">${skill}</span>`)
-.join("");
-
-document.getElementById("gaps").innerHTML =
-gapsHTML;
-
-}
-catch(error){
-
-console.error(error);
-
-document.getElementById("loading").style.display = "none";
-
-/* IMPROVEMENT 2 */
-/* Better professional error message */
-
-alert("AI analysis failed. Please try again.");
-
+function setLoadingStep(txt) {
+  document.getElementById('loading-step').textContent = txt;
 }
 
+async function runAnalysis() {
+  const base = getBaseUrl();
+  if (!base) { showToast('Set your n8n Base URL first', 'error'); return; }
+
+  const jdText = document.getElementById('jd-input').value.trim();
+  const resumeText = document.getElementById('resume-input').value.trim();
+
+  if (!jdText) { showToast('Paste a Job Description', 'error'); return; }
+  if (!resumeText) { showToast('Paste a Resume', 'error'); return; }
+
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('analyze-btn').disabled = true;
+  setPill(2);
+
+  try {
+    // Step 1: Parse JD
+    setLoadingStep('Step 1/3 — Parsing Job Description…');
+    const jdRes = await fetch(`${base}/webhook/jd-ingest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jd_text: jdText })
+    });
+    if (!jdRes.ok) throw new Error(`JD Parser failed: ${jdRes.status} ${jdRes.statusText}`);
+    const parsedJD = await jdRes.json();
+
+    // Step 2: Parse Resume
+    setLoadingStep('Step 2/3 — Parsing Resume…');
+    const resumeRes = await fetch(`${base}/webhook/resume-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resume_text: resumeText })
+    });
+    if (!resumeRes.ok) throw new Error(`Resume Parser failed: ${resumeRes.status} ${resumeRes.statusText}`);
+    const parsedResume = await resumeRes.json();
+
+    // Step 3: Score Match
+    setLoadingStep('Step 3/3 — Scoring Match…');
+    const scoreRes = await fetch(`${base}/webhook/match-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parsed_jd: parsedJD, parsed_resume: parsedResume })
+    });
+    if (!scoreRes.ok) throw new Error(`Match Scorer failed: ${scoreRes.status} ${scoreRes.statusText}`);
+    const scoreData = await scoreRes.json();
+
+    lastResults = { parsedJD, parsedResume, scoreData };
+    renderResults(parsedJD, parsedResume, scoreData);
+    setPill(3);
+
+  } catch (err) {
+    console.error(err);
+    showToast(`Error: ${err.message}`, 'error');
+  } finally {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('analyze-btn').disabled = false;
+  }
 }
 
+function renderResults(jd, resume, score) {
+  document.getElementById('input-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'block';
+
+  // Normalize — n8n may return array-wrapped or direct objects
+  const s = Array.isArray(score) ? score[0] : score;
+  const j = Array.isArray(jd)    ? jd[0]    : jd;
+  const r = Array.isArray(resume)? resume[0] : resume;
+
+  const matchScore = Number(s.match_score || 0);
+  const matchLevel = (s.match_level || 'Unknown Match').toLowerCase();
+  const strengths  = s.strengths || [];
+  const gaps       = s.gaps || [];
+  const reasoning  = s.reasoning || '';
+
+  // Score ring
+  const circumference = 325.7;
+  const offset = circumference - (matchScore / 100) * circumference;
+  const ring = document.getElementById('score-ring');
+  const color = matchLevel.includes('strong') ? '#10B981' : matchLevel.includes('moderate') ? '#F59E0B' : '#EF4444';
+  ring.style.stroke = color;
+  setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
+
+  // Animate number
+  let n = 0;
+  const step = matchScore / 60;
+  const interval = setInterval(() => {
+    n = Math.min(n + step, matchScore);
+    document.getElementById('score-display').textContent = Math.round(n);
+    if (n >= matchScore) clearInterval(interval);
+  }, 16);
+
+  // Badge
+  const badge = document.getElementById('match-badge');
+  badge.textContent = s.match_level || 'Unknown';
+  badge.className = 'match-level-badge ' + (matchLevel.includes('strong') ? 'strong' : matchLevel.includes('moderate') ? 'moderate' : 'weak');
+
+  document.getElementById('score-title').textContent = `${j.job_title || 'Position'} ↔ ${r.candidate_name || 'Candidate'}`;
+  document.getElementById('score-reasoning').textContent = reasoning;
+
+  // Strengths & Gaps
+  const sl = document.getElementById('strengths-list');
+  const gl = document.getElementById('gaps-list');
+  sl.innerHTML = strengths.map(s => `<span class="tag strength">${s}</span>`).join('');
+  gl.innerHTML = gaps.map(g => `<span class="tag gap">${g}</span>`).join('');
+
+  // Parsed JD fields
+  const jdFields = document.getElementById('jd-fields');
+  const jdData = [
+    ['Title', j.job_title || j.job_title],
+    ['Seniority', j.seniority],
+    ['Experience', j.min_experience_years != null ? `${j.min_experience_years}+ years` : null],
+    ['Location', j.location],
+    ['Type', j.employment_type],
+  ].filter(([,v]) => v);
+
+  jdFields.innerHTML = jdData.map(([k,v]) => `
+    <div class="parsed-field">
+      <span class="parsed-key">${k}</span>
+      <span class="parsed-val">${v}</span>
+    </div>
+  `).join('');
+
+  if ((j.required_skills || []).length) {
+    jdFields.innerHTML += `
+      <div class="parsed-field" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <span class="parsed-key">Required Skills</span>
+        <div class="skill-chips">${(j.required_skills || []).map(s => `<span class="skill-chip">${s}</span>`).join('')}</div>
+      </div>`;
+  }
+
+  // Parsed Resume fields
+  const resumeFields = document.getElementById('resume-fields');
+  const resumeData = [
+    ['Name', r.candidate_name],
+    ['Experience', r.total_years_experience != null ? `${r.total_years_experience} years` : null],
+    ['Recent Role', r.most_recent_role],
+    ['Degree', r.education_degree],
+  ].filter(([,v]) => v);
+
+  resumeFields.innerHTML = resumeData.map(([k,v]) => `
+    <div class="parsed-field">
+      <span class="parsed-key">${k}</span>
+      <span class="parsed-val">${v}</span>
+    </div>
+  `).join('');
+
+  if ((r.core_skills || []).length) {
+    resumeFields.innerHTML += `
+      <div class="parsed-field" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <span class="parsed-key">Core Skills</span>
+        <div class="skill-chips">${(r.core_skills || []).map(s => `<span class="skill-chip">${s}</span>`).join('')}</div>
+      </div>`;
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAll() {
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('input-section').style.display = 'block';
+  document.getElementById('jd-input').value = '';
+  document.getElementById('resume-input').value = '';
+  updateCharCount();
+  setPill(1);
+  lastResults = null;
+}
+
+function exportResults() {
+  if (!lastResults) return;
+  const blob = new Blob([JSON.stringify(lastResults, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `match-score-${Date.now()}.json`;
+  a.click();
+}
+
+function loadDemo() {
+  document.getElementById('jd-input').value = `Senior Full Stack Engineer — FinTech Startup
+
+We're seeking a Senior Full Stack Engineer with 5+ years of experience to join our growing engineering team. You'll be working on our core banking infrastructure and customer-facing web applications.
+
+Required Skills: React, TypeScript, Node.js, PostgreSQL, REST APIs, Docker, AWS
+Nice to Have: GraphQL, Redis, Kubernetes, CI/CD pipelines, Financial domain knowledge
+
+Responsibilities:
+- Design and implement scalable backend services using Node.js and PostgreSQL
+- Build responsive front-end interfaces with React and TypeScript
+- Collaborate with product and design teams on feature delivery
+- Participate in code reviews and architecture discussions
+- Lead junior developers and mentor team members
+
+Requirements:
+- 5+ years of software development experience
+- Strong experience with React and Node.js ecosystems
+- Experience with cloud platforms, preferably AWS
+- Familiarity with agile development practices
+
+Employment Type: Full-time
+Location: Remote (India)`;
+
+  document.getElementById('resume-input').value = `Priya Sharma — Senior Software Engineer
+priya.sharma@email.com | LinkedIn: linkedin.com/in/priyasharma | GitHub: github.com/priyasharma
+
+SUMMARY
+Results-driven Full Stack Engineer with 6 years of experience building scalable web applications. Specialized in React, Node.js, and cloud-native architectures. Proven ability to deliver complex projects end-to-end.
+
+EXPERIENCE
+
+Senior Software Engineer — Razorpay (2021 – Present)
+- Led development of a real-time payment dashboard using React, TypeScript and Node.js serving 2M+ transactions/day
+- Designed PostgreSQL schemas for high-throughput financial data with proper indexing
+- Migrated legacy services to Docker containers on AWS ECS, reducing infrastructure cost by 30%
+- Mentored a team of 4 junior engineers
+
+Full Stack Developer — TechCorp Solutions (2019 – 2021)
+- Built REST APIs using Express.js integrated with PostgreSQL and Redis caching
+- Developed responsive React SPAs with TypeScript, improving page load times by 40%
+- Set up CI/CD pipelines using GitHub Actions and Docker
+
+SKILLS
+React, TypeScript, Node.js, Express.js, PostgreSQL, Redis, Docker, AWS (ECS, S3, RDS), REST APIs, GraphQL, Git, Agile/Scrum
+
+EDUCATION
+B.Tech Computer Science — VIT University, 2019
+
+CERTIFICATIONS
+AWS Certified Developer – Associate (2022)`;
+
+  updateCharCount();
+  showToast('Demo content loaded ✓', 'success');
+}
+
+function showToast(msg, type='error') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 </script>
-
 </body>
 </html>
